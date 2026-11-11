@@ -144,3 +144,5 @@ Báo cáo tại [`reports/REPORT.md`](reports/REPORT.md):
 ## 9. Giới hạn và hướng mở rộng
 
 ## 10. Tài liệu tham khảo
+
+- [Dataset: Air Quality Dataset for Ho Chi Minh City](https://zenodo.org/records/18673714): BACKUP DATASET

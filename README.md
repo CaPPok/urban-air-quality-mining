@@ -38,7 +38,10 @@ urban_air_quality_mining/
 ├── scripts/                        # Các script chạy pipeline
 │   ├── eda.py                     
 │   ├── evaluate.py                 
-│   └── train.py                    
+│   ├── train.py                    
+│   └── prepare-dataset/            # Chuẩn bị bộ dữ liệu OpenAQ
+│       ├── download_openaq_archive.py
+│       └── merge_openaq_archive.py
 ├── src/                            # Mã nguồn chính  
 │   ├── air_quality_mining/                  
 │   │   └── features.py     
@@ -71,12 +74,22 @@ python -m pip install -e .
 
 ## 4. Chuẩn bị dữ liệu
 
-Nguồn: **CMT8, HCMC, VietNam** tại [OpenAQ](https://explore.openaq.org/locations/3276359).
+Nguồn: **CMT8, HCMC, VietNam** (location ID `3276359`) trên [OpenAQ](https://explore.openaq.org/locations/3276359), gồm gần 2 năm dữ liệu khả dụng.
 
-1. Tải dữ liệu từ UCI và đọc thông tin giấy phép/nguồn.
-2. Giải nén các file `.csv` của từng trạm vào `data/raw/` (không nén ZIP trong đó).
-3. File CSV nguồn cần có `year, month, day, hour, PM2.5`; các cột khí tượng thường gồm `TEMP, PRES, DEWP, RAIN, WSPM, wd` và `station`.
-4. Để tạo bản đồ, chuẩn bị CSV riêng gồm `station,latitude,longitude` với tọa độ **đã xác minh**. Không tự đoán tọa độ.
+Các file nén theo ngày được lưu trong `data/raw/openaq_cmt8_2y/`. Sau khi gộp, dữ liệu giờ dạng rộng nằm tại `data/openaq_cmt8_2y_hourly.csv`, ngay trong thư mục `data/` để notebook và pipeline dùng trực tiếp.
+
+CSV đã gộp gồm thời gian, location/coordinates, PM1, PM2.5, PM10, độ ẩm tương đối, nhiệt độ và số hạt PM0.3. Location metadata thay đổi trong giai đoạn dữ liệu; PM10 chỉ có một phần thời gian. Các giờ thiếu được giữ trống, chưa xử lý.
+
+Notebook `notebooks/eda.ipynb` dùng để trình bày và giải thích workflow. Các script trong `scripts/` dùng để chạy pipeline có thể tái lập; nhóm script chuẩn bị dữ liệu nằm riêng trong `scripts/prepare-dataset/`.
+
+Tải bản OpenAQ gần 2 năm hiện có và tạo file dataset CSV gộp bằng hai lệnh sau:
+
+```bash
+python3 scripts/prepare-dataset/download_openaq_archive.py
+python3 scripts/prepare-dataset/merge_openaq_archive.py
+```
+
+Các bước EDA và tiền xử lý nên đọc `data/openaq_cmt8_2y_hourly.csv`; dữ liệu nguồn vẫn được giữ riêng dưới `data/raw/`.
 
 ## 5. Chạy chương trình
 

@@ -1,6 +1,7 @@
 __pycache__/
 .venv/
-data/raw/
+data/raw/*
+!data/raw/openaq_cmt8_2y_hourly.csv
 .DS_Store
 **/.DS_Store
 artifacts/metrics/eda_preprocessing_summary.json

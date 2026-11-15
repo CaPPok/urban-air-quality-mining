@@ -110,7 +110,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=project_root / "data" / "openaq_cmt8_2y_hourly.csv",
+        default=project_root / "data" / "raw" / "openaq_cmt8_2y_hourly.csv",
     )
     args = parser.parse_args()
     row_count, missing_hour_count = merge(args.input_dir, args.output)

@@ -1,0 +1,3 @@
+,location_segment_id,location,latitude,longitude,start_datetime,end_datetime,hour_rows,pm2_5_observed,pm10_observed
+0,0,One Verandah Ciel 13th floor-3246311,10.77698,106.751552,2024-11-19T18:00:00+07:00,2025-02-13T00:00:00+07:00,2047,1285,1261
+1,1,CMT8-3246311,10.78533,106.67029,2025-02-13T01:00:00+07:00,2026-11-11T00:00:00+07:00,15264,14684,0

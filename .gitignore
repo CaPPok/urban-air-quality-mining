@@ -1,4 +1,6 @@
-*/__pycache__
-data/raw/*
+__pycache__/
+.venv/
+data/raw/
 .DS_Store
-*/.DS_Store
+**/.DS_Store
+artifacts/metrics/eda_preprocessing_summary.json

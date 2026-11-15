@@ -10,7 +10,7 @@ Dự án phân tích dữ liệu quan trắc không khí đô thị, dự báo n
 
 **Phạm vi:**
 
-- Dữ liệu lịch sử: **CMT8, HCMC, VietNam** tại [OpenAQ](https://explore.openaq.org/locations/3276359), quan trắc theo giờ, nhiều trạm; có PM2.5, nhiệt độ, khí áp, điểm sương, gió, mưa.
+- Dữ liệu lịch sử: **CMT8, HCMC, VietNam** tại [OpenAQ](https://explore.openaq.org/locations/3276359), quan trắc theo giờ. CSV hiện có PM1, PM2.5, PM10, độ ẩm tương đối, nhiệt độ và số hạt PM0.3; metadata tên vị trí/tọa độ thay đổi giữa hai đoạn. CSV không có áp suất, điểm sương, gió hay mưa và PM10 chỉ có độ phủ một phần.
 - Hồi quy: dự báo PM2.5 tại `t+1` từ dữ liệu có đến `t`.
 - Các mô hình mục tiêu: **baseline persistence, Random Forest Regressor, XGBoost Regressor, LSTM**.
 - Phân loại: 6 mức **Tốt / Trung bình / Kém / Xấu / Rất xấu / Nguy hại** theo AQI được lựa chọn và cấu hình có nguồn.
@@ -29,8 +29,6 @@ urban_air_quality_mining/
 │   └── figures/                    
 ├── configs/                        # Cấu hình dự án
 ├── data/                           # Dataset
-├── notebooks/                      # Notebook EDA và thực nghiệm
-│   └── eda.ipynb
 ├── notes/                          # Ghi chú dự án
 │   └── TASK.md
 ├── reports/                        # Báo cáo tổng hợp
@@ -76,11 +74,11 @@ python -m pip install -e .
 
 Nguồn: **CMT8, HCMC, VietNam** (location ID `3276359`) trên [OpenAQ](https://explore.openaq.org/locations/3276359), gồm gần 2 năm dữ liệu khả dụng.
 
-Các file nén theo ngày được lưu trong `data/raw/openaq_cmt8_2y/`. Sau khi gộp, dữ liệu giờ dạng rộng nằm tại `data/openaq_cmt8_2y_hourly.csv`, ngay trong thư mục `data/` để notebook và pipeline dùng trực tiếp.
+Các file nén theo ngày được lưu trong `data/raw/openaq_cmt8_2y/`. Sau khi gộp, dữ liệu giờ dạng rộng nằm tại `data/raw/openaq_cmt8_2y_hourly.csv`.
 
 CSV đã gộp gồm thời gian, location/coordinates, PM1, PM2.5, PM10, độ ẩm tương đối, nhiệt độ và số hạt PM0.3. Location metadata thay đổi trong giai đoạn dữ liệu; PM10 chỉ có một phần thời gian. Các giờ thiếu được giữ trống, chưa xử lý.
 
-Notebook `notebooks/eda.ipynb` dùng để trình bày và giải thích workflow. Các script trong `scripts/` dùng để chạy pipeline có thể tái lập; nhóm script chuẩn bị dữ liệu nằm riêng trong `scripts/prepare-dataset/`.
+Các script trong `scripts/` dùng để chạy pipeline có thể tái lập; biểu đồ và bảng kết quả được lưu trong `artifacts/` để dùng khi báo cáo. Nhóm script chuẩn bị dữ liệu nằm riêng trong `scripts/prepare-dataset/`.
 
 Tải bản OpenAQ gần 2 năm hiện có và tạo file dataset CSV gộp bằng hai lệnh sau:
 
@@ -89,7 +87,22 @@ python3 scripts/prepare-dataset/download_openaq_archive.py
 python3 scripts/prepare-dataset/merge_openaq_archive.py
 ```
 
-Các bước EDA và tiền xử lý nên đọc `data/openaq_cmt8_2y_hourly.csv`; dữ liệu nguồn vẫn được giữ riêng dưới `data/raw/`.
+Các bước EDA và tiền xử lý sẽ dùng `data/raw/openaq_cmt8_2y_hourly.csv` làm dữ liệu để chạy.
+
+### Chạy EDA và tiền xử lý
+
+Từ thư mục gốc repository, sau khi kích hoạt `.venv`, chạy:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 scripts/eda.py
+```
+
+Pipeline lưu dữ liệu đã chuẩn hóa, đặc trưng ứng viên và cột kiểm toán tại `data/processed/openaq_cmt8_preprocessed.csv`; bảng `data/processed/openaq_cmt8_model_ready.csv` chỉ gồm 7 đặc trưng nền tảng, nhãn PM2.5 đo thật ở giờ kế tiếp và thông tin phân chia train/validation/test theo thời gian. Cột `split` dùng để chia tập (theo thời gian), không phải đầu vào mô hình.
+
+Đoạn vị trí ban đầu (`One Verandah Ciel 13th floor-3246311`) được giữ trong dữ liệu tiền xử lý và EDA để truy vết, nhưng loại khỏi `model_ready`. Metadata và tọa độ của đoạn này khác với CMT8 hiện tại; dù OpenAQ giữ cùng `location_id` nhưng đoạn cũ chỉ đóng góp 7,64% số hàng đủ điều kiện trước khi loại. Loại đoạn này giúp tránh khả năng trộn dữ liệu từ hai vị trí địa lý khác nhau.
+
+Quy trình điền xuôi đầu vào tối đa 2 giờ; ngưỡng này chỉ áp dụng cho feature đầu vào tức thời. Trung bình trượt PM2.5 được tính riêng từ số đo gốc trong cửa sổ 24 giờ và yêu cầu ít nhất 18 quan trắc thật (75% độ phủ), để hạn chế tính trung bình trên cửa sổ thiếu nhiều dữ liệu. Nhãn giờ kế tiếp không được nội suy. Ngoại biên được đánh dấu để rà soát, không tự động xóa hay chỉnh sửa. Bảy đặc trưng nền tảng gồm PM2.5 hiện tại, trung bình trượt PM2.5 24 giờ, nhiệt độ và các cặp sin/cos giờ, tháng. Hình và bảng EDA được lưu trong `artifacts/figures/` và `artifacts/metrics/`; phân tích tương quan chỉ mang tính mô tả.
 
 ## 5. Chạy chương trình
 

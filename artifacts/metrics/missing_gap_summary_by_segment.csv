@@ -1,0 +1,13 @@
+,location_segment_id,location,measurement,hour_rows,missing_hours,missing_pct,missing_gap_count,longest_missing_gap_hours
+0,0,One Verandah Ciel 13th floor-3246311,pm1_ug_m3,2047,762,37.22520762090865,11,690
+1,0,One Verandah Ciel 13th floor-3246311,pm2_5_ug_m3,2047,762,37.22520762090865,11,690
+2,0,One Verandah Ciel 13th floor-3246311,pm10_ug_m3,2047,786,38.39765510503175,11,714
+3,0,One Verandah Ciel 13th floor-3246311,relative_humidity_pct,2047,762,37.22520762090865,11,690
+4,0,One Verandah Ciel 13th floor-3246311,temperature_c,2047,762,37.22520762090865,11,690
+5,0,One Verandah Ciel 13th floor-3246311,pm0_3_count_particles_cm3,2047,762,37.22520762090865,11,690
+6,1,CMT8-3246311,pm1_ug_m3,15264,580,3.7997903563941304,51,393
+7,1,CMT8-3246311,pm2_5_ug_m3,15264,580,3.7997903563941304,51,393
+8,1,CMT8-3246311,pm10_ug_m3,15264,15264,100.0,1,15264
+9,1,CMT8-3246311,relative_humidity_pct,15264,580,3.7997903563941304,51,393
+10,1,CMT8-3246311,temperature_c,15264,580,3.7997903563941304,51,393
+11,1,CMT8-3246311,pm0_3_count_particles_cm3,15264,580,3.7997903563941304,51,393

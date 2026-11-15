@@ -1,0 +1,20 @@
+feature,train_pairwise_rows,pearson_with_target,spearman_with_target,selected_for_default_model,selection_note
+pm2_5_ug_m3_input_causal,10102,0.869611021442984,0.8757419144835358,True,Latest observed or short-gap-filled PM2.5 value; directly available at prediction time.
+pm2_5_lag_1h,10089,0.7229456902773911,0.7297656903366544,False,Redundant with current PM2.5 in the training period and has a weaker marginal target association.
+pm2_5_lag_3h,10067,0.5056798181461715,0.5008490228165824,False,Omitted from the compact baseline; rolling mean represents recent history.
+pm2_5_lag_24h,9969,0.4012453679261471,0.4586390297109884,False,Omitted from the compact baseline; rolling mean represents recent history.
+pm2_5_rolling24h_mean,9969,0.5222830631534043,0.5305911790226375,True,Recent PM2.5 background; uses raw observations and requires at least 18 of 24 hours.
+pm1_ug_m3_input_causal,10102,0.8662879580119044,0.8706768693550425,False,"Strongly overlap with concurrent PM2.5; omitted from the compact baseline, not proven unhelpful."
+pm1_ug_m3_lag_1h,10089,0.7184063033699718,0.7222487136757662,False,Lagged particulate measures overlap with PM2.5 history and are omitted from the compact baseline.
+relative_humidity_pct_input_causal,10102,-0.024186975785503367,-0.030516567377920852,False,Strongly correlated with temperature and has weak marginal target correlation in this dataset.
+relative_humidity_pct_lag_1h,10089,0.002784433236154189,-0.0018524822990669077,False,Lagged humidity has a weak marginal target association and is redundant with current humidity.
+temperature_c_input_causal,10102,-0.07024254966767664,-0.06596355220830774,True,Available meteorological signal; kept as a candidate despite weak marginal correlation.
+temperature_c_lag_1h,10089,-0.11186517253450666,-0.11754722478915289,False,Omitted to keep one compact meteorological input; its incremental value is not established.
+pm0_3_count_particles_cm3_input_causal,10102,0.8617098723944344,0.8689907429781609,False,"Strongly overlap with concurrent PM2.5; omitted from the compact baseline, not proven unhelpful."
+pm0_3_count_particles_cm3_lag_1h,10089,0.7167470083882823,0.7206410540800031,False,Lagged particulate measures overlap with PM2.5 history and are omitted from the compact baseline.
+hour_sin,10119,0.1476741959574812,0.15368345523278604,True,Pair encoding within-day periodicity without treating clock hours as a linear scale.
+hour_cos,10119,-0.19657114489576574,-0.19980011442227774,True,Pair encoding within-day periodicity without treating clock hours as a linear scale.
+day_of_week_sin,10119,-0.007480067856017363,0.001625641015404364,False,Weak marginal association in the training period; left out of the compact baseline.
+day_of_week_cos,10119,-0.030080491418890853,-0.04572623108172917,False,Weak marginal association in the training period; left out of the compact baseline.
+month_sin,10119,-0.08258254707062983,-0.11234282601532768,True,Pair encoding annual seasonality; stability should be checked on later time periods.
+month_cos,10119,0.2968431554383992,0.2808418471927774,True,Pair encoding annual seasonality; stability should be checked on later time periods.

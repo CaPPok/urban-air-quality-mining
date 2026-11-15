@@ -11,7 +11,7 @@
 - Vì sao dự báo trước 1 giờ hữu ích cho cảnh báo sớm.
 
 ### 1.2. Phát biểu bài toán
-- Input: chuỗi quan trắc PM2.5 đến giờ t và khí tượng (nhiệt độ, áp suất, độ ẩm/điểm sương, gió, mưa), thời gian và trạm đo.
+- Input: theo dữ liệu OpenAQ hiện có chuỗi PM2.5 đến giờ t, PM1, PM10 (đang có độ phủ thưa), độ ẩm tương đối, nhiệt độ, số hạt PM0.3, thời gian và đoạn vị trí. Nguồn hiện tại không cung cấp áp suất, điểm sương, gió hoặc mưa.
 - Output 1: PM2.5 ở giờ t+1 (µg/m³).
 - Output 2: mức AQI suy ra từ PM2.5 24 giờ khi đủ dữ liệu và có breakpoint chính thức; không đánh đồng với AQI tổng hợp nhiều chất ô nhiễm.
 
@@ -68,14 +68,17 @@
 - Vẽ pipeline và mô tả mục tiêu từng thành phần.
 
 ### 3.2. Thu thập, mô tả và hiểu dữ liệu
-- Tên tập, giấy phép/nguồn, số quan sát, trạm đo, thời điểm, chu kỳ lấy mẫu.
-- Từ điển thuộc tính: PM2.5, TEMP, PRES, DEWP, RAIN, WSPM, wd, station, time.
+- Tên tập, giấy phép/nguồn, số quan sát, vị trí (đoạn metadata), thời điểm, chu kỳ lấy mẫu.
+- Từ điển thuộc tính theo CSV thực tế: PM1, PM2.5, PM10, độ ẩm tương đối, nhiệt độ, số hạt PM0.3, tọa độ và thời gian; ghi rõ PM10 thưa và không có PRES/DEWP/RAIN/WSPM/wd trong nguồn hiện tại.
 - Thống kê missing, outlier, tương quan, độ lệch phân phối, tính mùa vụ.
 
 ### 3.3. Làm sạch và feature engineering
-- Kiểm tra bản ghi trùng, thời điểm khuyết, PM2.5 âm, dữ liệu thiếu; chiến lược điền khuyết giải thích rõ.
-- Chỉ dùng thông tin ≤ t cho dự báo t+1; không nội suy xuyên tập test vào train.
-- Lag/rolling, encoding, numerical imputation fit trên train; chỉ rõ cột đích và các cột dự báo.
+- Parse timestamp về múi giờ Việt Nam, kiểm tra timestamp trùng, tạo lưới giờ đầy đủ, ô không có phép đo vẫn để thiếu.
+- Chuyển các giá trị âm của nồng độ/đếm hạt và độ ẩm ngoài [0, 100] thành thiếu. Điền xuôi nhân quả tối đa 2 giờ cho đầu vào, không dùng nội suy hai phía vì nó cần quan sát tương lai nên có thể đưa dữ liệu tương lai hoà vào trong data quá khứ. Nhãn PM2.5 t+1 không được điền.
+- Tính hàng rào IQR riêng theo đoạn vị trí và lưu điểm vượt ngưỡng để rà soát. Không tự động loại hay làm trơn vì đỉnh nồng độ có thể là sự kiện ô nhiễm thật.
+- Tạo rolling PM2.5 24 giờ từ số đo gốc khi có ít nhất 18/24 quan trắc thật (hạn chế tính trung bình trên cửa sổ thiếu nhiều dữ liệu), biến chu kỳ giờ/tháng và nhãn đo thật t+1.
+- Tạo các đặc trưng ứng viên và kiểm tra tương quan.
+- Không fit scaler trên toàn bộ chuỗi mà để mô hình cần scale phải fit scaler trong pipeline train.
 
 ### 3.4. Thiết kế tập dữ liệu và thực nghiệm
 - Train/validation/test theo mốc thời gian, ví dụ 70/15/15, không shuffle.

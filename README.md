@@ -29,6 +29,8 @@ urban_air_quality_mining/
 │   └── figures/                    
 ├── configs/                        # Cấu hình dự án
 ├── data/                           # Dataset
+├── notebooks/                      # Notebook EDA và thực nghiệm
+│   └── eda.ipynb
 ├── notes/                          # Ghi chú dự án
 │   └── TASK.md
 ├── reports/                        # Báo cáo tổng hợp
@@ -54,6 +56,8 @@ urban_air_quality_mining/
 
 ## 3. Chuẩn bị môi trường
 
+Khuyến nghị dùng **Python 3.10 trở lên**.
+
 ```bash
 # Tại thư mục gốc repository
 python -m venv .venv
@@ -67,7 +71,6 @@ source .venv/bin/activate
 
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python -m pip install -e .
 ```
 
 ## 4. Chuẩn bị dữ liệu

@@ -1,0 +1,9 @@
+Model,Approach,Accuracy,Macro_F1,Weighted_F1,AUC_ROC_macro
+Majority Class Baseline,Rule-based,0.4742,0.1608,0.305,
+Persistence Baseline -> AQI Mapping,Threshold Mapping,0.8039,0.7286,0.8038,
+Ridge Baseline -> AQI Mapping,Threshold Mapping,0.8008,0.6978,0.7994,
+Random Forest Regressor -> AQI Mapping,Threshold Mapping,0.8104,0.6502,0.8083,
+XGBoost Regressor -> AQI Mapping,Threshold Mapping,0.8065,0.6668,0.8042,
+LSTM Regressor -> AQI Mapping,Threshold Mapping,0.8191,0.6714,0.8164,
+Random Forest Classifier (balanced),Direct Multiclass,0.7802,0.6452,0.7825,
+XGBoost Classifier,Direct Multiclass,0.803,0.6556,0.8003,

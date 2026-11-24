@@ -1,0 +1,9 @@
+features,n_features,model,RMSE,MAE,R2,MAPE_pct
+Full (all 7 features),7,Ridge,6.0812,4.1847,0.6459,20.42
+Full (all 7 features),7,RF,5.777,3.9746,0.6804,19.26
+No month_sin/cos,5,Ridge,6.1279,4.2533,0.6404,21.22
+No month_sin/cos,5,RF,5.7796,3.9852,0.6801,19.35
+No temperature,6,Ridge,6.1032,4.202,0.6433,20.49
+No temperature,6,RF,5.8913,3.9983,0.6677,19.38
+No month + No temp,4,Ridge,6.1534,4.2783,0.6374,21.37
+No month + No temp,4,RF,5.8952,4.0148,0.6672,19.48

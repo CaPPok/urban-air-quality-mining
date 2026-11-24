@@ -1,0 +1,16 @@
+Model,Top_Fraction,Baseline_Rate,Precision,Lift
+Persistence Baseline,10%,0.0898,0.7237,8.06
+Ridge Baseline,10%,0.0898,0.7061,7.87
+Random Forest Regressor,10%,0.0898,0.7193,8.01
+XGBoost Regressor,10%,0.0898,0.7105,7.92
+LSTM Regressor,10%,0.09,0.7225,8.03
+Persistence Baseline,20%,0.0898,0.4167,4.64
+Ridge Baseline,20%,0.0898,0.4167,4.64
+Random Forest Regressor,20%,0.0898,0.4145,4.62
+XGBoost Regressor,20%,0.0898,0.4145,4.62
+LSTM Regressor,20%,0.09,0.4198,4.66
+Persistence Baseline,30%,0.0898,0.2861,3.19
+Ridge Baseline,30%,0.0898,0.2861,3.19
+Random Forest Regressor,30%,0.0898,0.2847,3.17
+XGBoost Regressor,30%,0.0898,0.2847,3.17
+LSTM Regressor,30%,0.09,0.287,3.19

@@ -1,0 +1,16 @@
+{
+  "input_dim": 7,
+  "hidden_dim": 64,
+  "num_layers": 2,
+  "dropout": 0.2,
+  "seq_len": 6,
+  "features": [
+    "pm2_5_ug_m3_input_causal",
+    "pm2_5_rolling24h_mean",
+    "temperature_c_input_causal",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos"
+  ]
+}

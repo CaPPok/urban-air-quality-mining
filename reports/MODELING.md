@@ -224,13 +224,15 @@ Ghi nhận từ `artifacts/metrics/clustering_silhouette.csv` trên không gian 
 
 ## 6. PHÂN TÍCH CHUYÊN SÂU & GIẢI TRÌNH 8 CÂU HỎI KỸ THUẬT
 
-Dưới đây là phần thảo luận kỹ thuật nghiêm túc, thẳng thắn về các vấn đề trọng yếu của bài toán khai phá dữ liệu chất lượng không khí:
+### 6.1. Câu hỏi 1: Về việc trộn dự báo 1 giờ với 2 giờ & Căn chỉnh nhãn `create_sliding_sequences`
+> **Câu hỏi:** Bảng so sánh có trộn dự báo 1 giờ (RF, Ridge, XGB) với 2 giờ (LSTM) không? Vì sao `create_sliding_sequences` ghép cửa sổ với `y[i+seq_len]` thay vì `y[i+seq_len-1]`?
 
-### Câu 1: Sửa lỗi căn chỉnh nhãn LSTM và so sánh công bằng giữa các mô hình
 - **Phân tích lỗi cũ:** Trong triển khai ban đầu, hàm `create_sliding_sequences` gán nhãn mục tiêu là `y[i + seq_len]`. Do cột `target_pm2_5_next_hour` trong dữ liệu tiền xử lý vốn dĩ đã là giá trị nồng độ tại giờ $t+1$ của quan sát tương ứng, việc lấy `y[i + seq_len]` khiến chuỗi đầu vào $x_t$ bị ghép với nhãn tại thời điểm $t+2$ (dự báo 2 giờ tới thay vì 1 giờ). Điều này tạo ra sự bất công bằng nghiêm trọng khi so sánh với RF, Ridge, XGB (vốn dự báo đúng 1 giờ tới $t+1$), khiến RMSE của LSTM bị đẩy lên tới 9.80 µg/m³.
 - **Kết quả sau khắc phục:** Đã sửa chỉ số trích xuất thành `y[i + seq_len - 1]`. Sau khi huấn luyện lại với Early Stopping (dừng tại epoch 13, điểm tối ưu tại epoch 9), kết quả của LSTM đã nhảy vọt: Test RMSE đạt **6.9959**, Test MAE đạt **4.9290** (tốt nhất trong toàn bộ mô hình), $R^2 = 0.7917$. Bảng so sánh hiện tại đã đảm bảo tính công bằng tuyệt đối: tất cả mô hình đều dự báo cùng một mục tiêu tại bước $t+1$.
 
-### Câu 2: Lựa chọn mô hình theo Recall ở ngưỡng 50 µg/m³ và Tỷ lệ báo nhầm thay vì RMSE/Accuracy
+### 6.2. Câu hỏi 2: Về mục tiêu cảnh báo, Recall ở ngưỡng 50 và Số giờ báo nhầm so với RMSE/Accuracy
+> **Câu hỏi:** Nếu mục tiêu là cảnh báo, vì sao chọn mô hình theo RMSE hay Accuracy mà không theo recall ở ngưỡng 50 và số giờ báo nhầm?
+
 - **Thực tế trong bài toán cảnh báo sức khỏe:** Phân phối cấp độ ô nhiễm bị lệch rất lớn (chỉ 9.06% mẫu Test có PM2.5 $\ge 50$ µg/m³). Một mô hình tối ưu theo Accuracy hay RMSE có xu hướng dự báo an toàn ở dải giá trị trung bình, dẫn đến việc bỏ sót các sự kiện ô nhiễm cao (False Negative - FN). Trong y tế dự phòng, việc người dân hít phải bụi mịn độc hại mà không được cảnh báo có cái giá đắt hơn nhiều so với việc cảnh báo thừa (False Positive - FP).
 - **So sánh khách quan:**
   - **Persistence Baseline** đạt Recall cao nhất ở ngưỡng 50 µg/m³ (**0.7440**), nhưng phải đánh đổi bằng **53 ca báo nhầm** (FAR = 0.0255).
@@ -238,7 +240,9 @@ Dưới đây là phần thảo luận kỹ thuật nghiêm túc, thẳng thắn
   - **LSTM Regressor** đạt Precision cao nhất (**0.8627**, 95% CI: [0.807, 0.918]) và tỷ lệ báo nhầm thấp nhất (**FAR = 0.0101**, chỉ 21 ca báo nhầm).
 - **Kết luận:** Nếu mục tiêu nghiệp vụ là **"tuyệt đối không bỏ sót ô nhiễm"**, nên chọn Random Forest (hoặc hạ ngưỡng kích hoạt cảnh báo xuống 45 µg/m³ để đạt Recall 73.1%). Nếu mục tiêu là **"tránh hiện tượng chai lì cảnh báo" (alarm fatigue)** do báo động giả, LSTM là lựa chọn số 1.
 
-### Câu 3: Hiện tượng Random Forest dự báo thấp đỉnh tới 16.3 µg/m³ ở nhóm PM2.5 > 80 µg/m³
+### 6.3. Câu hỏi 3: Về việc RF dự báo thấp đỉnh tới 16 µg/m³ ở nhóm > 80 và Hàm mất mát phi đối xứng
+> **Câu hỏi:** Vì sao RF dự báo thấp đỉnh tới 16 µg/m³ ở nhóm > 80? Hàm mất mát bình phương trung bình có đang "kéo về giữa" không, và đã thử hàm mất mát phi đối xứng hoặc huấn luyện riêng cho sự kiện cao chưa?
+
 - **Bằng chứng thực nghiệm:** Thực nghiệm kiểm tra trên 23 mẫu có $y_{\text{true}} > 80$ µg/m³ cho thấy:
   - Giá trị thực tế trung bình: **92.53 µg/m³**
   - Giá trị Random Forest dự báo trung bình: **76.23 µg/m³**
@@ -247,12 +251,16 @@ Dưới đây là phần thảo luận kỹ thuật nghiêm túc, thẳng thắn
 - **Giải thích toán học:** Hàm mất mát Mean Squared Error (MSE) tìm nghiệm xấp xỉ kỳ vọng có điều kiện $\mathbb{E}[y \mid X]$. Khi các nút lá của Random Forest chứa ít mẫu cực trị và nhiều mẫu lân cận có nồng độ thấp hơn, giá trị trung bình tại lá bị kéo mạnh về phía trung bình tổng thể — đây chính là hiện tượng **"co cụm về trung bình" (shrinkage bias / regression to the mean)**.
 - **Thừa nhận:** Đề tài hiện tại **chưa thử nghiệm** các hàm mất mát phi đối xứng (như Lin-Lin Loss phạt nặng $\hat{y} < y$, Pinball Loss trong Quantile Regression ở phân vị 90%) hoặc kiến trúc huấn luyện hai pha (Two-Stage Extreme Event Training). Đây là hạn chế đã được ghi nhận để nghiên cứu bổ sung.
 
-### Câu 4: Đánh giá trên 23 đợt "Xấu" và độ tin cậy thống kê
-- **Thực tế mẫu thử:** Trong 2,284 giờ của tập Test, chỉ có đúng **23 mẫu (1.0%)** rơi vào cấp Xấu (80 - 150 µg/m³), và hoàn toàn không có mẫu nào rơi vào cấp Rất xấu (>150 µg/m³).
-- **Độ tin cậy:** Với cỡ mẫu $N=23$, các chỉ số phân loại (Recall, Precision) cho riêng cấp Xấu có phương sai rất lớn và không đủ độ tin cậy thống kê để khẳng định mô hình có khả năng tổng quát hóa trên mọi đợt ô nhiễm nặng.
+### 6.4. Câu hỏi 4: Về đánh giá trên cỡ mẫu đợt "Xấu" và Kế hoạch mở rộng theo mùa / trạm
+> **Câu hỏi:** Chấm trên 9 đợt "Xấu" thì còn kết luận được gì? Đã có kế hoạch đánh giá trên thêm một mùa khô hay thêm trạm khác chưa?
+
+- **Thực tế mẫu thử:** Trong 2,284 giờ của tập Test, chỉ có đúng **23 mẫu (1.0%)** rơi vào cấp Xấu (80 - 150 µg/m³ - thuộc khoảng 9 đợt bùng phát ô nhiễm ngắn), và hoàn toàn không có mẫu nào rơi vào cấp Rất xấu (>150 µg/m³).
+- **Độ tin cậy:** Với cỡ mẫu chỉ gồm các đợt ngắn này, các chỉ số phân loại (Recall, Precision) cho riêng cấp Xấu có phương sai rất lớn và không đủ độ tin cậy thống kê để khẳng định mô hình có khả năng tổng quát hóa trên mọi đợt ô nhiễm nặng.
 - **Kế hoạch mở rộng:** Cần đánh giá trên tối thiểu 1 mùa khô trọn vẹn tiếp theo (tháng 11 đến tháng 4 năm sau - thời điểm TP.HCM chịu ảnh hưởng nặng nhất của hiện tượng nghịch nhiệt bức xạ) và thu thập thêm dữ liệu từ các trạm quan trắc khác (như trạm Lãnh sự quán Hoa Kỳ tại Quận 1, các trạm PAM Air lân cận) để kiểm định chéo không gian.
 
-### Câu 5: Trần hiệu năng của bài toán dự báo 1 giờ và sự cần thiết của dữ liệu khí tượng
+### 6.5. Câu hỏi 5: Về trần hiệu năng của bài toán 1 giờ và Bổ sung dữ liệu khí tượng (gió, mưa)
+> **Câu hỏi:** Nếu thêm lag/biến thiên chỉ giúp thêm ~0.1 µg/m³, trần của bài toán 1 giờ với dữ liệu này là bao nhiêu? Có nên bổ sung dữ liệu khí tượng (gió, mưa) thay vì thử mô hình sâu hơn?
+
 - **Trần hiệu năng:** PM2.5 nội tại có tính tự tương quan thời gian cực mạnh ($r \approx 0.88$ ở độ trễ 1 giờ). Mô hình Persistence ngây thơ đã đạt RMSE = 7.33 µg/m³. Các thuật toán học máy phức tạp nhất (RF, XGBoost, LSTM) chỉ hạ được RMSE xuống mức **~6.99 µg/m³** (cải thiện vỏn vẹn ~0.34 µg/m³, tương đương 4.6%).
 - **Kết luận về kiến trúc:** Trần của bài toán dự báo 1 giờ chỉ với các biến PM2.5 quá khứ và nhiệt độ/giờ/tháng nằm ở ngưỡng **RMSE ~ 6.9 - 7.0 µg/m³**. Việc thử nghiệm các mô hình mạng nơ-ron sâu hơn (như Transformer, Informer, ST-GCN) trên cùng tập dữ liệu này sẽ không mang lại cải thiện đột phá.
 - **Giải pháp căn cơ:** Để dự báo chính xác các bước chuyển trạng thái đột ngột (điểm bùng phát ô nhiễm hoặc thời điểm bụi tan nhanh), **bắt buộc phải bổ sung các biến động lực học khí quyển**:
@@ -260,7 +268,9 @@ Dưới đây là phần thảo luận kỹ thuật nghiêm túc, thẳng thắn
   2. *Mưa và độ ẩm không khí (Precipitation & RH):* Hiệu ứng lắng đọng ướt (wet deposition) tẩy rửa bụi mịn.
   3. *Chiều cao lớp biên hành tinh (PBLH) & Chỉ số nghịch nhiệt:* Quyết định thể tích không gian giam giữ chất ô nhiễm sát mặt đất.
 
-### Câu 6: Bằng chứng thực nghiệm về việc giữ đặc trưng Tháng và Nhiệt độ
+### 6.6. Câu hỏi 6: Về căn cứ giữ đặc trưng Tháng và Nhiệt độ trong chưa đầy hai năm dữ liệu
+> **Câu hỏi:** Đặc trưng tháng và nhiệt độ không cải thiện rõ nhưng vẫn được giữ. Với chưa đầy hai năm dữ liệu, việc giữ chúng dựa trên bằng chứng nào?
+
 Với tập dữ liệu chưa đầy 2 năm quan sát (14,523 giờ), các biến chu kỳ năm (`month_sin`, `month_cos`) rất dễ bắt nhiễu ngẫu nhiên. Thực nghiệm loại bỏ đặc trưng (Feature Ablation) trên tập Validation cho thấy:
 
 | Cấu hình đặc trưng | Số đặc trưng | Mô hình | Validation RMSE | Validation $R^2$ | Chênh lệch RMSE so với bản Full |
@@ -277,7 +287,9 @@ Với tập dữ liệu chưa đầy 2 năm quan sát (14,523 giờ), các biế
 - **Nhiệt độ (`temperature_c_input_causal`)** có đóng góp thực sự vào việc giảm sai số (+0.11 µg/m³), phản ánh chu kỳ nhiệt động lực học trong ngày tại đô thị TP.HCM.
 - **Chu kỳ tháng (`month_sin/cos`)** gần như không mang lại giá trị gia tăng nào cho Random Forest (chỉ chênh lệch 0.0026 µg/m³), vì biến `pm2_5_rolling24h_mean` đã gánh phần lớn thông tin nền của mùa. Việc giữ lại biến tháng thuần túy mang tính bảo lưu lý thuyết khí tượng mùa khô/mưa và có thể lược bỏ để làm mô hình nhẹ hơn.
 
-### Câu 7: Tính nhất quán của hàm Real-Time Inference và Kiểm thử đầu-cuối
+### 6.7. Câu hỏi 7: Về việc mã hóa month trong hàm Real-Time vs Huấn luyện và Kiểm thử đầu-cuối
+> **Câu hỏi:** Vì sao hàm real-time dùng month còn lúc huấn luyện dùng month − 1? Và có kiểm thử đầu-cuối cho hàm này không?
+
 - **Kiểm tra mã nguồn:** Script huấn luyện và hàm `predict_next_hour_aqi` đều dùng công thức mã hóa:
   $$\text{month\_sin} = \sin\left(\frac{2\pi \cdot \text{month}}{12}\right), \quad \text{month\_cos} = \cos\left(\frac{2\pi \cdot \text{month}}{12}\right)$$
   với `month` nhận giá trị từ 1 đến 12. Không có sự sai lệch giữa `month` và `month - 1`.
@@ -286,9 +298,11 @@ Với tập dữ liệu chưa đầy 2 năm quan sát (14,523 giờ), các biế
   2. `test_create_sliding_sequences_correct_target`: Xác minh chuỗi trượt LSTM lấy đúng nhãn $t+1$ tại vị trí `seq_len - 1`.
   3. `test_threshold_detection_metrics`: Xác minh độ chính xác của hàm tính Recall/Precision và 95% Bootstrap CI.
 
-### Câu 8: Sự sai lệch giữa việc ánh xạ PM2.5 theo giờ sang AQI so với Chuẩn 24 giờ / NowCast
+### 6.8. Câu hỏi 8: Về định nghĩa nhãn PM2.5 theo giờ sang AQI so với Chuẩn 24 giờ / NowCast
+> **Câu hỏi:** PM2.5 theo giờ được ánh xạ thẳng sang cấp AQI, trong khi AQI chính thức dùng trung bình 24 giờ hoặc NowCast. Nhãn "đúng" có đang bị định nghĩa lệch không?
+
 - **Chuẩn mực chính thức:** Theo Quyết định số 1459/QĐ-TCMT và hướng dẫn của US EPA, chỉ số chất lượng không khí AQI cho PM2.5 được tính trên nồng độ **trung bình 24 giờ liên tục** hoặc thông qua thuật toán trọng số lũy thoái **NowCast** (tính trên 12 giờ gần nhất).
-- **Thẳng thắn nhìn nhận:** Việc lấy nồng độ PM2.5 tức thời 1 giờ ánh xạ thẳng vào bảng ngưỡng nồng độ của chuẩn 24 giờ là một **sự giản lược kỹ thuật (technical simplification)** nhằm đưa ra phản hồi tức thời theo từng giờ cho người dùng. Về mặt danh nghĩa môi trường, nhãn này chính xác phải được gọi là **"Cấp độ ô nhiễm tức thời theo giờ của bụi mịn PM2.5"** chứ **không phải chỉ số VN-AQI chính thức có giá trị pháp lý**.
+- **Thẳng thắn nhìn nhận:** Việc lấy nồng độ PM2.5 tức thời 1 giờ ánh xạ thẳng vào bảng ngưỡng nồng độ của chuẩn 24 giờ là một **sự giản lược kỹ thuật (technical simplification)** nhằm đưa ra phản hồi tức thời theo từng giờ cho người dùng. Về mặt danh nghĩa môi trường, nhãn này chính xác phải được gọi là **"Cấp độ ô nhiễm tức thời theo giờ của bụi mịn PM2.5"** chứ **không phải chỉ số VN-AQI chính thức có giá trị pháp lý**. Nhãn "đúng" (ground truth) của bài toán thực chất là cấp độ nồng độ tức thời theo giờ, chứ không phản ánh đúng chuẩn AQI 24h quy định.
 - **Đề xuất nâng cấp:** Trong phiên bản tiếp theo, nhóm nghiên cứu sẽ:
   1. Tích hợp thuật toán NowCast vào đường ống xử lý dữ liệu trước khi ánh xạ sang cấp cảnh báo.
   2. Bổ sung mô hình dự báo trực tiếp chuỗi trung bình trượt 24h để tính AQI chuẩn quy chuẩn quốc gia.

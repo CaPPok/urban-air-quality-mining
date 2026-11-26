@@ -21,42 +21,26 @@ Dự án phân tích dữ liệu quan trắc không khí đô thị, dự báo n
 
 ```text
 urban_air_quality_mining/
-├── app/                            # Dashboard minh họa
-│   └── streamlit_app.py           
+├── app/                            # Dashboard minh họa        
 ├── artifacts/                      # Kết quả huấn luyện và đánh giá mô hình
 │   ├── models/                     
 │   ├── metrics/                    
 │   └── figures/                    
-├── configs/                        # Cấu hình dự án
 ├── data/                           # Dataset
-├── notebooks/                      # Notebook EDA và thực nghiệm
-│   └── eda.ipynb
-├── notes/                          # Ghi chú dự án
-│   └── TASK.md
+├── notebooks/                      #               
 ├── reports/                        # Báo cáo tổng hợp
-│   └── REPORT.md
 ├── scripts/                        # Các script chạy pipeline
-│   ├── eda.py                     
-│   ├── evaluate.py                 
-│   ├── train.py                    
-│   └── prepare-dataset/            # Chuẩn bị bộ dữ liệu OpenAQ
-│       ├── download_openaq_archive.py
-│       └── merge_openaq_archive.py
 ├── src/                            # Mã nguồn chính  
-│   ├── air_quality_mining/                  
-│   │   └── features.py     
-│   ├── preprocessing/                      
-│   │   └── preprocess.py                
-├── tests/                          # Test unit       
-│   └── test_features.py
+│   ├── air_quality_mining/    
+│   ├── eda_workflow                   
+│   ├── preprocessing/                               
+├── tests/                          # Unit test      
 ├── .gitignore
 ├── README.md
 └── requirements.txt                # Thư viện cài đặt
 ```
 
 ## 3. Chuẩn bị môi trường
-
-Khuyến nghị dùng **Python 3.10 trở lên**.
 
 ```bash
 # Tại thư mục gốc repository
